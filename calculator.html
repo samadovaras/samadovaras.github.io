@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; display: flex; justify-content: center; padding: 30px 15px; }
+    .calc { width: 300px; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    #screen { width: 100%; box-sizing: border-box; font-size: 28px; text-align: right; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 8px; }
+    .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    button { font-size: 20px; padding: 16px 0; border: none; border-radius: 8px; background: #e6e9ed; cursor: pointer; }
+    button.op { background: #0a66c2; color: #fff; }
+    button.eq { background: #2e9e4f; color: #fff; }
+    button.clr { background: #d9534f; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="calc">
+    <input id="screen" readonly value="0">
+    <div class="keys">
+      <button class="clr" onclick="clearAll()">C</button>
+      <button onclick="back()">⌫</button>
+      <button class="op" onclick="add('/')">÷</button>
+      <button class="op" onclick="add('*')">×</button>
+      <button onclick="add('7')">7</button>
+      <button onclick="add('8')">8</button>
+      <button onclick="add('9')">9</button>
+      <button class="op" onclick="add('-')">−</button>
+      <button onclick="add('4')">4</button>
+      <button onclick="add('5')">5</button>
+      <button onclick="add('6')">6</button>
+      <button class="op" onclick="add('+')">+</button>
+      <button onclick="add('1')">1</button>
+      <button onclick="add('2')">2</button>
+      <button onclick="add('3')">3</button>
+      <button class="eq" onclick="calc()" style="grid-row: span 2">=</button>
+      <button onclick="add('0')" style="grid-column: span 2">0</button>
+      <button onclick="add('.')">.</button>
+    </div>
+  </div>
+  <script>
+    const screen = document.getElementById('screen');
+    let expr = '';
+    function show() { screen.value = expr || '0'; }
+    function add(c) { expr += c; show(); }
+    function clearAll() { expr = ''; show(); }
+    function back() { expr = expr.slice(0, -1); show(); }
+    function calc() {
+      try {
+        const r = Function('"use strict"; return (' + expr + ')')();
+        expr = String(r);
+      } catch (e) { expr = ''; screen.value = 'Error'; return; }
+      show();
+    }
+  </script>
+</body>
+</html>
