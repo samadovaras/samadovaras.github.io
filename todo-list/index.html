@@ -11,28 +11,26 @@ body {
     font-family: Arial, sans-serif;
     background: #101827;
     color: white;
-    padding: 40px 20px;
+    padding: 30px 15px;
 }
 .container {
     max-width: 550px;
     margin: auto;
     background: #1e293b;
-    padding: 30px;
+    padding: 25px;
     border-radius: 16px;
 }
 h1, .subtitle { text-align: center; }
-.subtitle { color: #94a3b8; margin-bottom: 25px; }
-.input-area { display: flex; gap: 10px; margin-bottom: 12px; }
-input[type="text"], select {
-    flex: 1;
-    min-width: 0;
+.subtitle { color: #94a3b8; margin: 12px 0 22px; }
+input, select {
+    width: 100%;
     padding: 13px;
+    margin-bottom: 12px;
     border: none;
     border-radius: 8px;
     background: #334155;
     color: white;
 }
-select { margin-bottom: 18px; width: 100%; }
 button {
     border: none;
     border-radius: 8px;
@@ -40,48 +38,89 @@ button {
     cursor: pointer;
     font-weight: bold;
 }
-.add-btn, .filters button.active {
+.add-btn {
+    width: 100%;
+    background: #38bdf8;
+    color: #0f172a;
+    margin-bottom: 20px;
+}
+.filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.filters button {
+    flex: 1;
+    background: #334155;
+    color: white;
+}
+.filters button.active {
     background: #38bdf8;
     color: #0f172a;
 }
-.filters { display: flex; gap: 10px; margin-bottom: 20px; }
-.filters button { flex: 1; background: #334155; color: white; }
 ul { list-style: none; padding: 0; }
 li {
+    background: #334155;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.task-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #334155;
-    padding: 13px;
-    margin-bottom: 10px;
-    border-radius: 8px;
 }
-li span { flex: 1; overflow-wrap: anywhere; }
-li.completed span { text-decoration: line-through; color: #94a3b8; }
-.priority { font-size: 12px; font-weight: bold; white-space: nowrap; }
+.task-row input {
+    width: auto;
+    margin: 0;
+}
+.task-name {
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+.completed .task-name {
+    text-decoration: line-through;
+    color: #94a3b8;
+}
+.priority { font-size: 12px; font-weight: bold; }
 .high { color: #f87171; }
 .medium { color: #facc15; }
 .low { color: #4ade80; }
-.delete-btn { background: #ef4444; color: white; }
-.empty, .counter { text-align: center; color: #94a3b8; }
+.due-date {
+    display: block;
+    color: #94a3b8;
+    font-size: 12px;
+    margin: 9px 0 0 27px;
+}
+.delete-btn {
+    background: #ef4444;
+    color: white;
+    margin-top: 10px;
+}
+.empty, .counter {
+    text-align: center;
+    color: #94a3b8;
+}
 .counter { margin-top: 20px; }
 </style>
 </head>
 <body>
+
 <div class="container">
     <h1>My To-Do List</h1>
     <p class="subtitle">Organize your day, one task at a time.</p>
 
-    <div class="input-area">
-        <input type="text" id="taskInput" placeholder="Enter a new task...">
-        <button class="add-btn" onclick="addTask()">Add</button>
-    </div>
+    <input type="text" id="taskInput" placeholder="Enter a new task...">
 
     <select id="priorityInput">
         <option value="low">Low Priority</option>
         <option value="medium" selected>Medium Priority</option>
         <option value="high">High Priority</option>
     </select>
+
+    <input type="date" id="dueDateInput">
+
+    <button class="add-btn" onclick="addTask()">Add Task</button>
 
     <div class="filters">
         <button class="active" onclick="filterTasks('all', this)">All</button>
@@ -103,22 +142,26 @@ function saveTasks() {
 
 function addTask() {
     const input = document.getElementById("taskInput");
-    const taskText = input.value.trim();
+    const text = input.value.trim();
     const priority = document.getElementById("priorityInput").value;
+    const dueDate = document.getElementById("dueDateInput").value;
 
-    if (!taskText) {
+    if (!text) {
         alert("Please enter a task!");
         return;
     }
 
     tasks.push({
         id: Date.now(),
-        text: taskText,
+        text: text,
         completed: false,
-        priority: priority
+        priority: priority,
+        dueDate: dueDate
     });
 
     input.value = "";
+    document.getElementById("dueDateInput").value = "";
+
     saveTasks();
     renderTasks();
 }
@@ -140,9 +183,10 @@ function deleteTask(id) {
 
 function filterTasks(filter, button) {
     currentFilter = filter;
-    document.querySelectorAll(".filters button").forEach(btn => {
-        btn.classList.remove("active");
-    });
+
+    document.querySelectorAll(".filters button")
+        .forEach(btn => btn.classList.remove("active"));
+
     button.classList.add("active");
     renderTasks();
 }
@@ -166,26 +210,42 @@ function renderTasks() {
 
     filtered.forEach(task => {
         const li = document.createElement("li");
+
         if (task.completed) li.classList.add("completed");
+
+        const row = document.createElement("div");
+        row.className = "task-row";
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.completed;
         checkbox.addEventListener("change", () => toggleTask(task.id));
 
-        const span = document.createElement("span");
-        span.textContent = task.text;
+        const name = document.createElement("span");
+        name.className = "task-name";
+        name.textContent = task.text;
 
-        const priority = document.createElement("small");
-        priority.className = "priority " + (task.priority || "medium");
-        priority.textContent = (task.priority || "medium").toUpperCase();
+        const priority = document.createElement("span");
+        const level = task.priority || "medium";
+        priority.className = "priority " + level;
+        priority.textContent = level.toUpperCase();
+
+        row.append(checkbox, name, priority);
+        li.appendChild(row);
+
+        if (task.dueDate) {
+            const date = document.createElement("small");
+            date.className = "due-date";
+            date.textContent = "Due: " + task.dueDate;
+            li.appendChild(date);
+        }
 
         const del = document.createElement("button");
         del.textContent = "Delete";
         del.className = "delete-btn";
         del.addEventListener("click", () => deleteTask(task.id));
 
-        li.append(checkbox, span, priority, del);
+        li.appendChild(del);
         list.appendChild(li);
     });
 
@@ -194,17 +254,15 @@ function renderTasks() {
         `${tasks.length} tasks | ${completedCount} completed`;
 }
 
-document.getElementById("taskInput").addEventListener("keydown", event => {
-    if (event.key === "Enter") addTask();
-});
-
 tasks = tasks.map(task => ({
     ...task,
-    priority: task.priority || "medium"
+    priority: task.priority || "medium",
+    dueDate: task.dueDate || ""
 }));
 
 saveTasks();
 renderTasks();
 </script>
+
 </body>
 </html>
