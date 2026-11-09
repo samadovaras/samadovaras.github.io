@@ -22,8 +22,8 @@ body {
 }
 h1, .subtitle { text-align: center; }
 .subtitle { color: #94a3b8; margin-bottom: 25px; }
-.input-area, .filters { display: flex; gap: 10px; margin-bottom: 20px; }
-input[type="text"] {
+.input-area { display: flex; gap: 10px; margin-bottom: 12px; }
+input[type="text"], select {
     flex: 1;
     min-width: 0;
     padding: 13px;
@@ -32,6 +32,7 @@ input[type="text"] {
     background: #334155;
     color: white;
 }
+select { margin-bottom: 18px; width: 100%; }
 button {
     border: none;
     border-radius: 8px;
@@ -43,6 +44,7 @@ button {
     background: #38bdf8;
     color: #0f172a;
 }
+.filters { display: flex; gap: 10px; margin-bottom: 20px; }
 .filters button { flex: 1; background: #334155; color: white; }
 ul { list-style: none; padding: 0; }
 li {
@@ -56,6 +58,10 @@ li {
 }
 li span { flex: 1; overflow-wrap: anywhere; }
 li.completed span { text-decoration: line-through; color: #94a3b8; }
+.priority { font-size: 12px; font-weight: bold; white-space: nowrap; }
+.high { color: #f87171; }
+.medium { color: #facc15; }
+.low { color: #4ade80; }
 .delete-btn { background: #ef4444; color: white; }
 .empty, .counter { text-align: center; color: #94a3b8; }
 .counter { margin-top: 20px; }
@@ -70,6 +76,12 @@ li.completed span { text-decoration: line-through; color: #94a3b8; }
         <input type="text" id="taskInput" placeholder="Enter a new task...">
         <button class="add-btn" onclick="addTask()">Add</button>
     </div>
+
+    <select id="priorityInput">
+        <option value="low">Low Priority</option>
+        <option value="medium" selected>Medium Priority</option>
+        <option value="high">High Priority</option>
+    </select>
 
     <div class="filters">
         <button class="active" onclick="filterTasks('all', this)">All</button>
@@ -92,6 +104,7 @@ function saveTasks() {
 function addTask() {
     const input = document.getElementById("taskInput");
     const taskText = input.value.trim();
+    const priority = document.getElementById("priorityInput").value;
 
     if (!taskText) {
         alert("Please enter a task!");
@@ -101,7 +114,8 @@ function addTask() {
     tasks.push({
         id: Date.now(),
         text: taskText,
-        completed: false
+        completed: false,
+        priority: priority
     });
 
     input.value = "";
@@ -162,12 +176,16 @@ function renderTasks() {
         const span = document.createElement("span");
         span.textContent = task.text;
 
+        const priority = document.createElement("small");
+        priority.className = "priority " + (task.priority || "medium");
+        priority.textContent = (task.priority || "medium").toUpperCase();
+
         const del = document.createElement("button");
         del.textContent = "Delete";
         del.className = "delete-btn";
         del.addEventListener("click", () => deleteTask(task.id));
 
-        li.append(checkbox, span, del);
+        li.append(checkbox, span, priority, del);
         list.appendChild(li);
     });
 
@@ -180,6 +198,12 @@ document.getElementById("taskInput").addEventListener("keydown", event => {
     if (event.key === "Enter") addTask();
 });
 
+tasks = tasks.map(task => ({
+    ...task,
+    priority: task.priority || "medium"
+}));
+
+saveTasks();
 renderTasks();
 </script>
 </body>
