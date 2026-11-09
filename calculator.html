@@ -1,58 +1,205 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Calculator</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f8; display: flex; justify-content: center; padding: 30px 15px; }
-    .calc { width: 300px; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-    #screen { width: 100%; box-sizing: border-box; font-size: 28px; text-align: right; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 8px; }
-    .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    button { font-size: 20px; padding: 16px 0; border: none; border-radius: 8px; background: #e6e9ed; cursor: pointer; }
-    button.op { background: #0a66c2; color: #fff; }
-    button.eq { background: #2e9e4f; color: #fff; }
-    button.clr { background: #d9534f; color: #fff; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTORE Calculator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #101827;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .calculator {
+            width: 320px;
+            padding: 25px;
+            background: #1e293b;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px #0008;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+        }
+
+        #display {
+            width: 100%;
+            height: 65px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #0f172a;
+            color: white;
+            text-align: right;
+            padding: 12px;
+            font-size: 28px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            height: 55px;
+            border: none;
+            border-radius: 10px;
+            background: #334155;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #475569;
+        }
+
+        .operator {
+            background: #2563eb;
+        }
+
+        .equal {
+            background: #16a34a;
+        }
+
+        .clear {
+            background: #dc2626;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="calc">
-    <input id="screen" readonly value="0">
-    <div class="keys">
-      <button class="clr" onclick="clearAll()">C</button>
-      <button onclick="back()">⌫</button>
-      <button class="op" onclick="add('/')">÷</button>
-      <button class="op" onclick="add('*')">×</button>
-      <button onclick="add('7')">7</button>
-      <button onclick="add('8')">8</button>
-      <button onclick="add('9')">9</button>
-      <button class="op" onclick="add('-')">−</button>
-      <button onclick="add('4')">4</button>
-      <button onclick="add('5')">5</button>
-      <button onclick="add('6')">6</button>
-      <button class="op" onclick="add('+')">+</button>
-      <button onclick="add('1')">1</button>
-      <button onclick="add('2')">2</button>
-      <button onclick="add('3')">3</button>
-      <button class="eq" onclick="calc()" style="grid-row: span 2">=</button>
-      <button onclick="add('0')" style="grid-column: span 2">0</button>
-      <button onclick="add('.')">.</button>
+
+<div class="calculator">
+    <h2>Calculator</h2>
+
+    <input id="display" value="0" readonly>
+
+    <div class="buttons">
+        <button class="clear" onclick="clearDisplay()">C</button>
+        <button onclick="deleteLast()">DEL</button>
+        <button class="operator" onclick="chooseOperator('%')">%</button>
+        <button class="operator" onclick="chooseOperator('/')">÷</button>
+
+        <button onclick="addNumber('7')">7</button>
+        <button onclick="addNumber('8')">8</button>
+        <button onclick="addNumber('9')">9</button>
+        <button class="operator" onclick="chooseOperator('*')">×</button>
+
+        <button onclick="addNumber('4')">4</button>
+        <button onclick="addNumber('5')">5</button>
+        <button onclick="addNumber('6')">6</button>
+        <button class="operator" onclick="chooseOperator('-')">−</button>
+
+        <button onclick="addNumber('1')">1</button>
+        <button onclick="addNumber('2')">2</button>
+        <button onclick="addNumber('3')">3</button>
+        <button class="operator" onclick="chooseOperator('+')">+</button>
+
+        <button class="zero" onclick="addNumber('0')">0</button>
+        <button onclick="addNumber('.')">.</button>
+        <button class="equal" onclick="calculate()">=</button>
     </div>
-  </div>
-  <script>
-    const screen = document.getElementById('screen');
-    let expr = '';
-    function show() { screen.value = expr || '0'; }
-    function add(c) { expr += c; show(); }
-    function clearAll() { expr = ''; show(); }
-    function back() { expr = expr.slice(0, -1); show(); }
-    function calc() {
-      try {
-        const r = Function('"use strict"; return (' + expr + ')')();
-        expr = String(r);
-      } catch (e) { expr = ''; screen.value = 'Error'; return; }
-      show();
+</div>
+
+<script>
+    const display = document.getElementById("display");
+
+    let firstNumber = null;
+    let operator = null;
+    let waitingForNumber = false;
+
+    function addNumber(number) {
+        if (waitingForNumber) {
+            display.value = number;
+            waitingForNumber = false;
+            return;
+        }
+
+        if (number === "." && display.value.includes(".")) return;
+
+        display.value =
+            display.value === "0" && number !== "."
+            ? number
+            : display.value + number;
     }
-  </script>
+
+    function chooseOperator(op) {
+        if (operator !== null && !waitingForNumber) {
+            calculate();
+        }
+
+        firstNumber = Number(display.value);
+        operator = op;
+        waitingForNumber = true;
+    }
+
+    function calculate() {
+        if (operator === null || waitingForNumber) return;
+
+        const secondNumber = Number(display.value);
+        let result;
+
+        switch (operator) {
+            case "+":
+                result = firstNumber + secondNumber;
+                break;
+            case "-":
+                result = firstNumber - secondNumber;
+                break;
+            case "*":
+                result = firstNumber * secondNumber;
+                break;
+            case "/":
+                if (secondNumber === 0) {
+                    display.value = "Error";
+                    operator = null;
+                    return;
+                }
+                result = firstNumber / secondNumber;
+                break;
+            case "%":
+                result = firstNumber % secondNumber;
+                break;
+        }
+
+        display.value = String(Number(result.toPrecision(10)));
+        operator = null;
+        waitingForNumber = true;
+    }
+
+    function clearDisplay() {
+        display.value = "0";
+        firstNumber = null;
+        operator = null;
+        waitingForNumber = false;
+    }
+
+    function deleteLast() {
+        if (waitingForNumber) return;
+        display.value = display.value.length > 1
+            ? display.value.slice(0, -1)
+            : "0";
+    }
+</script>
+
 </body>
 </html>
