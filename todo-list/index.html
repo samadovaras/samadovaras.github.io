@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My To-Do List</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: Arial, sans-serif;
+    background: #101827;
+    color: white;
+    padding: 40px 20px;
+}
+.container {
+    max-width: 550px;
+    margin: auto;
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 16px;
+}
+h1, .subtitle { text-align: center; }
+.subtitle { color: #94a3b8; margin-bottom: 25px; }
+.input-area, .filters { display: flex; gap: 10px; margin-bottom: 20px; }
+input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    background: #334155;
+    color: white;
+}
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.add-btn, .filters button.active {
+    background: #38bdf8;
+    color: #0f172a;
+}
+.filters button { flex: 1; background: #334155; color: white; }
+ul { list-style: none; padding: 0; }
+li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #334155;
+    padding: 13px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+li span { flex: 1; overflow-wrap: anywhere; }
+li.completed span { text-decoration: line-through; color: #94a3b8; }
+.delete-btn { background: #ef4444; color: white; }
+.empty, .counter { text-align: center; color: #94a3b8; }
+.counter { margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>My To-Do List</h1>
+    <p class="subtitle">Organize your day, one task at a time.</p>
+
+    <div class="input-area">
+        <input type="text" id="taskInput" placeholder="Enter a new task...">
+        <button class="add-btn" onclick="addTask()">Add</button>
+    </div>
+
+    <div class="filters">
+        <button class="active" onclick="filterTasks('all', this)">All</button>
+        <button onclick="filterTasks('active', this)">Active</button>
+        <button onclick="filterTasks('completed', this)">Completed</button>
+    </div>
+
+    <ul id="taskList"></ul>
+    <p class="counter" id="counter">0 tasks</p>
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let currentFilter = "all";
+
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function addTask() {
+    const input = document.getElementById("taskInput");
+    const taskText = input.value.trim();
+
+    if (!taskText) {
+        alert("Please enter a task!");
+        return;
+    }
+
+    tasks.push({
+        id: Date.now(),
+        text: taskText,
+        completed: false
+    });
+
+    input.value = "";
+    saveTasks();
+    renderTasks();
+}
+
+function toggleTask(id) {
+    tasks = tasks.map(task => {
+        if (task.id === id) task.completed = !task.completed;
+        return task;
+    });
+    saveTasks();
+    renderTasks();
+}
+
+function deleteTask(id) {
+    tasks = tasks.filter(task => task.id !== id);
+    saveTasks();
+    renderTasks();
+}
+
+function filterTasks(filter, button) {
+    currentFilter = filter;
+    document.querySelectorAll(".filters button").forEach(btn => {
+        btn.classList.remove("active");
+    });
+    button.classList.add("active");
+    renderTasks();
+}
+
+function renderTasks() {
+    const list = document.getElementById("taskList");
+    list.innerHTML = "";
+
+    const filtered = tasks.filter(task => {
+        if (currentFilter === "active") return !task.completed;
+        if (currentFilter === "completed") return task.completed;
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        const message = document.createElement("p");
+        message.className = "empty";
+        message.textContent = "No tasks found.";
+        list.appendChild(message);
+    }
+
+    filtered.forEach(task => {
+        const li = document.createElement("li");
+        if (task.completed) li.classList.add("completed");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.completed;
+        checkbox.addEventListener("change", () => toggleTask(task.id));
+
+        const span = document.createElement("span");
+        span.textContent = task.text;
+
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "delete-btn";
+        del.addEventListener("click", () => deleteTask(task.id));
+
+        li.append(checkbox, span, del);
+        list.appendChild(li);
+    });
+
+    const completedCount = tasks.filter(t => t.completed).length;
+    document.getElementById("counter").textContent =
+        `${tasks.length} tasks | ${completedCount} completed`;
+}
+
+document.getElementById("taskInput").addEventListener("keydown", event => {
+    if (event.key === "Enter") addTask();
+});
+
+renderTasks();
+</script>
+</body>
+</html>
